@@ -10,13 +10,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-
-//private const val TAG = "PhotoGalleryFragment"
 
 class PhotoGalleryFragment : Fragment() {
 
@@ -27,10 +26,8 @@ class PhotoGalleryFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // TODO remove
         retainInstance = true
         photoGalleryViewModel = ViewModelProvider(this)[PhotoGalleryViewModel::class.java]
-        // TODO
         val responseHandler = Handler(Looper.myLooper() ?: Looper.getMainLooper())
         thumbnailDownloader =
             ThumbnailDownloader(responseHandler) { photoHolder, bitmap ->
@@ -78,24 +75,26 @@ class PhotoGalleryFragment : Fragment() {
         )
     }
 
-    private class PhotoHolder(itemImageView: ImageView)
-        : RecyclerView.ViewHolder(itemImageView) {
+    private class PhotoHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val imageView: ImageView = itemView.findViewById(R.id.gallery_image)
+        private val titleView: TextView = itemView.findViewById(R.id.gallery_title)
 
-        val bindDrawable: (Drawable) -> Unit = itemImageView::setImageDrawable
+        val bindDrawable: (Drawable) -> Unit = imageView::setImageDrawable
+
+        fun bindTitle(title: String) {
+            titleView.text = title
+        }
     }
 
-    private inner class PhotoAdapter(private val galleryItems: List<GalleryItem>)
-        : RecyclerView.Adapter<PhotoHolder>() {
+    private inner class PhotoAdapter(private val galleryItems: List<GalleryItem>) :
+        RecyclerView.Adapter<PhotoHolder>() {
 
-        override fun onCreateViewHolder(
-            parent: ViewGroup,
-            viewType: Int
-        ): PhotoHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoHolder {
             val view = layoutInflater.inflate(
                 R.layout.list_item_gallery,
                 parent,
                 false
-            ) as ImageView
+            )
             return PhotoHolder(view)
         }
 
@@ -109,6 +108,9 @@ class PhotoGalleryFragment : Fragment() {
             ) ?: ColorDrawable()
             holder.bindDrawable(placeholder)
             thumbnailDownloader.queueThumbnail(holder, galleryItem.url)
+
+            // Установка заголовка
+            holder.bindTitle(galleryItem.title)
         }
     }
 
